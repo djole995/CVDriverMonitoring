@@ -1,15 +1,9 @@
 #include "DriverDrowsinessPipeline.h"
 #include "Constants.h"
 #include "VideoProvider.h"
+#include "DebugUtils.h"
 
-#include <iostream>
-
-#ifdef DEBUG_VERSION
-#define DEBUG_LOG(str) (std::cout << str << std::endl)
-#else
-#define DEBUG_LOG(str)
-#endif
-
+extern bool app_terminated;
 
 bool DriverMonitoringPipeline::Init(const std::string& face_cascade_name, const std::string& eyes_cascade_name)
 {
@@ -33,11 +27,11 @@ bool DriverMonitoringPipeline::Init(const std::string& face_cascade_name, const 
 
 void DriverMonitoringPipeline::Run(VideoProvider& video_provider)
 {
-    while(true)
+    while(!app_terminated)
     {
         if(!video_provider.GetFrame(data_.original_img_))
         {
-            DEBUG_LOG("Failed to get frame, terminating program")
+            DEBUG_LOG("Failed to get frame, breaking algorithm loop!");
             break;
         }
 

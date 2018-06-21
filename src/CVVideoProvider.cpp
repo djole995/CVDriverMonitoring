@@ -1,10 +1,8 @@
 #include "CVVideoProvider.h"
 
-static std::string fileName("/home/djokicm/RT-RK/vm-shared-dir/frames/e.mp4");
-
-bool CVVideoProvider::Init()
+bool CVVideoProvider::Init(const std::string& file_name)
 {
-    if(!video_capture_.open(fileName))
+    if(!video_capture_.open(file_name))
     {
         return false;
     }
@@ -19,7 +17,6 @@ bool CVVideoProvider::GetFrame(cv::Mat& frame)
 {
     if(!video_capture_.read(frame))
     {
-        video_capture_.release();
         return false;
     }
     else

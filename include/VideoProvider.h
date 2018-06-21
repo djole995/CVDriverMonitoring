@@ -9,12 +9,6 @@
 class VideoProvider
 {
 public:
-    /**
-     * @brief init object
-     *
-     * @return true on success, otherwise false
-     */
-    virtual bool Init()=0;
 
     /**
      * @brief acquire frame from video source
@@ -24,11 +18,6 @@ public:
      * @return true if frame is successfully acquired, false otherwise
      */
     virtual bool GetFrame(cv::Mat& frame)=0;
-
-    /**
-     * @brief cleanup object
-     */
-    virtual void Shutdown()=0;
 };
 
 
