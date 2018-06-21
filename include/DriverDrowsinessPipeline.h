@@ -6,6 +6,9 @@
 #include <opencv2/imgproc.hpp>
 #include <opencv2/videoio.hpp>
 #include <opencv/cv.h>
+#include <memory>
+
+#include "VideoProvider.h"
 
 
 /**
@@ -51,7 +54,7 @@ public:
     /**
      * @brief Run algorithm loop, which runs pipeline phases for every new frame
      */
-    void Run();
+    void Run(VideoProvider& video_provider);
 
     /**
      * @brief Shutdown cleanup object resources
@@ -59,12 +62,6 @@ public:
     void Shutdown();
 
 private:
-
-    /**
-     * @brief Get new frame, which will be processed
-     * @return true if new frame is successfully acquired, else false
-     */
-    bool GetFrame();
 
     /**
      * @brief Grayscale & crop input image

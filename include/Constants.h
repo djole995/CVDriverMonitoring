@@ -17,6 +17,11 @@ constexpr size_t HORIZONTAL_CROP = (size_t)(INPUT_RESOLUTION_WIDTH -
         INPUT_RESOLUTION_HEIGHT + .5) >> 1;
 constexpr size_t VERTICAL_CROP = 0;
 
+constexpr float ratioX = (float)(INPUT_RESOLUTION_WIDTH - 2*HORIZONTAL_CROP)/
+               TARGET_RESOLUTION_WIDTH;
+constexpr float ratioY = (float)(INPUT_RESOLUTION_HEIGHT - 2*VERTICAL_CROP)/
+               TARGET_RESOLUTION_HEIGHT;
+
 //DROWSINESS SCORE
 #define driver_drowsiness_FPS (30.0f)
 
