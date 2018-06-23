@@ -61,6 +61,12 @@ public:
      */
     void Shutdown();
 
+    /**
+     * @brief GetDrowsinessScore
+     * @return driver drowisness score
+     */
+    float GetDrowsinessScore();
+
 private:
 
     /**

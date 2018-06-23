@@ -54,6 +54,11 @@ void DriverMonitoringPipeline::Shutdown()
 
 }
 
+float DriverMonitoringPipeline::GetDrowsinessScore()
+{
+    return drowsiness_score_;
+}
+
 void DriverMonitoringPipeline::GrayscaleCropImage()
 {
     grayscale_img_ = data_.original_img_.colRange(HORIZONTAL_CROP, INPUT_RESOLUTION_WIDTH - HORIZONTAL_CROP);

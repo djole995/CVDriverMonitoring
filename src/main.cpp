@@ -16,6 +16,7 @@
 #include "DriverDrowsinessPipeline.h"
 #include "CVVideoProvider.h"
 #include "DebugUtils.h"
+#include "QCMVideoProvider.h"
 
 bool app_terminated = false;
 
@@ -30,9 +31,11 @@ int main()
     std::string face_cascade_name = "../cascades/haarcascade_frontalface_alt.xml";
     std::string eyes_cascade_name = "../cascades/haarcascade_eye.xml";
     std::string fileName("/home/djokicm/RT-RK/vm-shared-dir/frames/DD.mp4");
+    CAM_Cameras camera_id = CAM_4;
 
     DriverMonitoringPipeline pipeline;
     CVVideoProvider cv_video_provider;
+    QCMVideoProvider qcm_video_provider;
 
     //Set SIGTERM handler
     struct sigaction action;
@@ -48,17 +51,18 @@ int main()
     app_state_client.ReportApplicationState(ara::exec::applicationstate::ApplicationState::kRunning);
 #endif
 
-    cv_video_provider.Init(fileName);
+    qcm_video_provider.Init(camera_id);
 
     // init algorithm pipeline and load classifiers
     pipeline.Init(face_cascade_name, eyes_cascade_name);
 
     // run pipeline loop
-    pipeline.Run(cv_video_provider);
+    pipeline.Run(qcm_video_provider);
 
     // cleanup resources when sigterm is received
     pipeline.Shutdown();
     cv_video_provider.Shutdown();
+    qcm_video_provider.Shutdown();
 
     return 0;
 }
