@@ -50,13 +50,6 @@ public:
      */
     bool Shutdown();
 
-    /**
-     * @brief Camera callback which will be triggered every time when new frame is available
-     * @param new_frame new camera frame
-     * @param stream_id stream from which frame arrived
-     */
-    friend void FrameArrived(uint8_t* new_frame, int stream_id);
-
 private:
 
     uint8_t frame_[QCM_CAM_FRAME_SIZE]; /**< acquired camera frame */

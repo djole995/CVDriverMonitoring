@@ -2,6 +2,10 @@
 #include "Constants.h"
 #include "VideoProvider.h"
 #include "DebugUtils.h"
+#include "RenderGraphics.h"
+
+#include <thread>
+#include <chrono>
 
 extern bool app_terminated;
 
@@ -22,13 +26,19 @@ bool DriverMonitoringPipeline::Init(const std::string& face_cascade_name, const 
     data_ = DriverMonitoringData();
     drowsiness_score_ = 0.0f;
 
+    initRenderTarget(1280, 720);
+
     return true;
 }
 
 void DriverMonitoringPipeline::Run(VideoProvider& video_provider)
 {
+    static double avg_fps = 0;
+    static int cnt = 0;
     while(!app_terminated)
     {
+        auto start = std::chrono::high_resolution_clock::now();
+
         if(!video_provider.GetFrame(data_.original_img_))
         {
             DEBUG_LOG("Failed to get frame, breaking algorithm loop!");
@@ -36,16 +46,35 @@ void DriverMonitoringPipeline::Run(VideoProvider& video_provider)
         }
 
         GrayscaleCropImage();
+        DEBUG_LOG("Grayscale crop image complete.");
 
         DownscaleImage();
+        DEBUG_LOG("Downscale image complete.");
 
         PerformFaceDetection();
+        DEBUG_LOG("Face detection complete.");
 
         PerformEyesDetection();
+        DEBUG_LOG("Eyes detection complete.");
 
         UpdateScore();
+        DEBUG_LOG("Score update complete.");
 
         RenderGraphics();
+        DEBUG_LOG("Grpahic rendering complete.");
+
+        auto finish = std::chrono::high_resolution_clock::now();
+
+        std::chrono::duration<double> elapsed_time = finish - start;
+
+        avg_fps += elapsed_time.count();
+        cnt++;
+
+        if(cnt == 2000)
+        {
+            avg_fps /= cnt;
+            std::cout << "avg fps: " << avg_fps << std::endl;
+        }
     }
 }
 
@@ -62,7 +91,7 @@ float DriverMonitoringPipeline::GetDrowsinessScore()
 void DriverMonitoringPipeline::GrayscaleCropImage()
 {
     grayscale_img_ = data_.original_img_.colRange(HORIZONTAL_CROP, INPUT_RESOLUTION_WIDTH - HORIZONTAL_CROP);
-    cv::cvtColor(grayscale_img_, grayscale_img_, CV_BGR2GRAY);
+    cv::cvtColor(grayscale_img_, grayscale_img_, CV_YUV2GRAY_UYVY);
     cv::equalizeHist(grayscale_img_, grayscale_img_);
 }
 
@@ -137,10 +166,10 @@ void DriverMonitoringPipeline::PerformEyesDetection()
     right_eye_ROI = grayscale_img_(data_.right_eye_region_);
 
     //-- In each face, detect eyes
-    eyes_cascade_.detectMultiScale(left_eye_ROI, left_eye, 1.1, 4, 0 | CV_HAAR_SCALE_IMAGE,
+    eyes_cascade_.detectMultiScale(left_eye_ROI, left_eye, 1.1, 2, 0 | CV_HAAR_SCALE_IMAGE,
                                    cv::Size(data_.face_region_.width * 0, data_.face_region_.height * 0), cv::Size(data_.face_region_.width * 0.35, data_.face_region_.height * 0.30));
 
-    eyes_cascade_.detectMultiScale(right_eye_ROI, right_eye, 1.1, 4, 0 | CV_HAAR_SCALE_IMAGE,
+    eyes_cascade_.detectMultiScale(right_eye_ROI, right_eye, 1.1, 2, 0 | CV_HAAR_SCALE_IMAGE,
         cv::Size(data_.face_region_.width * 0, data_.face_region_.height * 0), cv::Size(data_.face_region_.width * 0.35, data_.face_region_.height * 0.30));
 
     if(left_eye.size() == 0 && right_eye.size() == 0)
@@ -227,36 +256,133 @@ void DriverMonitoringPipeline::UpdateScore()
 
 void DriverMonitoringPipeline::RenderGraphics()
 {
-    std::string name = "window";
-    cv::Scalar eyes_rect_color;
-    cv::Scalar scorebar_color;
-    cv::Rect scorebar(10, data_.original_img_.rows - drowsiness_score_ * 50.f, 30, data_.original_img_.rows);
+    static Rectangle r[80];
+    int rect_cnt = 0;
+    // Drowsiness score bar
+    static V_XYZ score_bar_rect = { 10, 700, 0 };
+    static int score_rect_width = 20;
+    static int score_rect_height = 10;
+    static int rects_offset = 0;
+    // Render algorithm output on screen.
 
+    // If frontal face is found set its rectangle
     if(data_.face_found_)
     {
+        // Face region
+        r[0].vertices[0].x = data_.face_region_.x;
+        r[0].vertices[0].y = data_.face_region_.y;
+        r[0].vertices[0].z = 0;
+
+        r[0].vertices[1].x = data_.face_region_.x + data_.face_region_.width;
+        r[0].vertices[1].y = data_.face_region_.y;
+        r[0].vertices[1].z = 0;
+
+        r[0].vertices[2].x = data_.face_region_.x + data_.face_region_.width;
+        r[0].vertices[2].y = data_.face_region_.y + data_.face_region_.height;
+        r[0].vertices[2].z = 0;
+
+        r[0].vertices[3].x = data_.face_region_.x;
+        r[0].vertices[3].y = data_.face_region_.y + data_.face_region_.height;
+        r[0].vertices[3].z = 0;
+
+        r[0].r = 1.0f;
+        r[0].g = 0.0f;
+        r[0].b = 0.0f;
+
+        r[0].color_fill = false;
+
+        rect_cnt++;
+
+        // if eyes are detected and opened, set eyes region rectangles
+        // Left eye region
+        r[1].vertices[0].x = data_.left_eye_region_.x;
+        r[1].vertices[0].y = data_.left_eye_region_.y;
+        r[1].vertices[0].z = 0;
+
+        r[1].vertices[1].x = data_.left_eye_region_.x + data_.left_eye_region_.width;
+        r[1].vertices[1].y = data_.left_eye_region_.y;
+        r[1].vertices[1].z = 0;
+
+        r[1].vertices[2].x = data_.left_eye_region_.x + data_.left_eye_region_.width;
+        r[1].vertices[2].y = data_.left_eye_region_.y + data_.left_eye_region_.height;
+        r[1].vertices[2].z = 0;
+
+        r[1].vertices[3].x = data_.left_eye_region_.x;
+        r[1].vertices[3].y = data_.left_eye_region_.y + data_.left_eye_region_.height;
+        r[1].vertices[3].z = 0;
+
+        r[1].color_fill = false;
+
+        // Right eye region
+        r[2].vertices[0].x = data_.right_eye_region_.x;
+        r[2].vertices[0].y = data_.right_eye_region_.y;
+        r[2].vertices[0].z = 0;
+
+        r[2].vertices[1].x = data_.right_eye_region_.x + data_.right_eye_region_.width;
+        r[2].vertices[1].y = data_.right_eye_region_.y;
+        r[2].vertices[1].z = 0;
+
+        r[2].vertices[2].x = data_.right_eye_region_.x + data_.right_eye_region_.width;
+        r[2].vertices[2].y = data_.right_eye_region_.y + data_.right_eye_region_.height;
+        r[2].vertices[2].z = 0;
+
+        r[2].vertices[3].x = data_.right_eye_region_.x;
+        r[2].vertices[3].y = data_.right_eye_region_.y + data_.right_eye_region_.height;
+        r[2].vertices[3].z = 0;
+
+        r[2].color_fill = false;
+
+        rect_cnt += 2;
+
         if(data_.eyes_found_)
         {
-            eyes_rect_color = cv::Scalar(0, 255, 0);
-            scorebar_color = cv::Scalar(0, 255, 0);
+            r[1].r = 0.0f;
+            r[1].g = 1.0f;
+            r[1].b = 0.0f;
+
+            r[2].r = 0.0f;
+            r[2].g = 1.0f;
+            r[2].b = 0.0f;
         }
         else
         {
-            eyes_rect_color = cv::Scalar(0, 0, 255);
-            scorebar_color = cv::Scalar(0, 0, 255);
+            r[1].r = 1.0f;
+            r[1].g = 0.0f;
+            r[1].b = 0.0f;
+
+            r[2].r = 1.0f;
+            r[2].g = 0.0f;
+            r[2].b = 0.0f;
         }
-
-
-        cv::rectangle(data_.original_img_, data_.face_region_, cv::Scalar(0, 0, 255));
-        cv::rectangle(data_.original_img_, data_.left_eye_region_, eyes_rect_color);
-        cv::rectangle(data_.original_img_, data_.right_eye_region_, eyes_rect_color);
     }
-    else
+
+    // calculate height of score bar on the base of current drowsiness score
+    for(int k = 0; k < 60; k++)
     {
-       scorebar_color = cv::Scalar(0, 0, 255);
+        r[rect_cnt].vertices[0].x = score_bar_rect.x;
+        r[rect_cnt].vertices[0].y = score_bar_rect.y - k * (score_rect_height + rects_offset);
+        r[rect_cnt].vertices[1].x = score_bar_rect.x + score_rect_width;
+        r[rect_cnt].vertices[1].y = score_bar_rect.y - k * (score_rect_height + rects_offset);
+        r[rect_cnt].vertices[2].x = score_bar_rect.x + score_rect_width;
+        r[rect_cnt].vertices[2].y = score_bar_rect.y + (1-k) * score_rect_height - k * rects_offset;
+        r[rect_cnt].vertices[3].x = score_bar_rect.x;
+        r[rect_cnt].vertices[3].y = score_bar_rect.y + (1-k) * score_rect_height - k * rects_offset;
+
+        r[rect_cnt].r = k / 60.0f;
+        r[rect_cnt].g = (60-k) / 60.0f;
+        r[rect_cnt].b = 0.0f;
+
+        r[rect_cnt].color_fill = (drowsiness_score_ > k / 6.0f) ? true : false;
+
+        if(r[rect_cnt].color_fill)
+        {
+            rect_cnt++;
+        }
+        else
+        {
+            break;
+        }
     }
 
-    cv::rectangle(data_.original_img_, scorebar, scorebar_color, -1);
-
-    cv::imshow(name, data_.original_img_);
-    cv::waitKey(1);
+    render(r, rect_cnt, data_.original_img_.data);
 }

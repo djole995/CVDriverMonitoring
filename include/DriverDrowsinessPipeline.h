@@ -22,7 +22,6 @@ typedef struct DriverMonitoringData_
     cv::Rect right_eye_region_;  /**< right eye region calculated based on face region */
     bool face_found_;  /**< Indicates whether drivers face is found on input frame. */
     bool eyes_found_;  /**< Indicates whether eyes are open or closed */
-
 } DriverMonitoringData;
 
 
@@ -53,6 +52,8 @@ public:
 
     /**
      * @brief Run algorithm loop, which runs pipeline phases for every new frame
+     *
+     * @param video_provider processed video source
      */
     void Run(VideoProvider& video_provider);
 
