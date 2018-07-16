@@ -14,7 +14,12 @@ option(USE_ARA_API "USE_ARA_API" OFF)
 #Application developing for AA enviroment
 option(TARGET_QCM "USE_ARA_API" OFF)
 
-INCLUDE_DIRECTORIES(include ../common/DisplayAPI/inc gen/includes gen/vsomeip)
+option(IMAGE_FORMAT_UYVY "IMAGE_FORMAT_UYVY" OFF)
+option(IMAGE_FORMAT_BGR "IMAGE_FORMAT_BGR" OFF)
+
+set(INC_DIRS include)
+
+INCLUDE_DIRECTORIES(include ../common/DisplayAPI/inc gen/includes gen/vsomeip include/diag)
 
 aux_source_directory(src SRC_LIST)
 aux_source_directory(../common/DisplayAPI/inc SRC_LIST)
@@ -25,6 +30,10 @@ endif()
 
 if(USE_ARA_API)
     add_definitions(-DUSE_ARA_API)
+endif()
+
+if(USE_ARA_API)
+    aux_source_directory(src/diag SRC_LIST)
 endif()
 
 if(TARGET_QCM)
@@ -60,14 +69,15 @@ wayland-client wayland-egl EGL dl GLESv2 DisplayAPI
     E2EXF)
 else()
     message("Linux build")
+
     add_executable(${PROJECT_NAME} ${SRC_LIST})
     target_link_libraries(${PROJECT_NAME}
     /usr/local/lib/libopencv_core.so
     /usr/local/lib/libopencv_highgui.so
     /usr/local/lib/libopencv_imgproc.so
     /usr/local/lib/libopencv_objdetect.so
-    /usr/local/lib/libopencv_videoio.so
-wayland-client wayland-egl EGL dl GLESv2 DisplayAPI)
+    /usr/local/lib/libopencv_videoio.so DisplayAPI
+wayland-client wayland-egl EGL dl GLESv2)
 endif()
 
 

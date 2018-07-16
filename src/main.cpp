@@ -35,8 +35,13 @@ static void terminate(int signum)
 
 int main()
 {
+#ifdef USE_ARA_API
+    std::string face_cascade_name = "/opt/CVDriverMonitoring/cascades/haarcascade_frontalface_alt.xml";
+    std::string eyes_cascade_name = "/opt/CVDriverMonitoring/cascades/haarcascade_eye.xml";
+#else
     std::string face_cascade_name = "../cascades/haarcascade_frontalface_alt.xml";
     std::string eyes_cascade_name = "../cascades/haarcascade_eye.xml";
+#endif
 
 #ifdef TARGET_QCM
     CAM_Cameras video_provider_param = CAM_4;
@@ -59,12 +64,10 @@ int main()
     sigaction(SIGTERM, &action, NULL);
     sigaction(SIGKILL, &action, NULL);
 
-
     // integrate with ARA Execution Manager
 #ifdef USE_ARA_API
     ara::exec::applicationstate::ApplicationStateClient app_state_client;
     DDDiagService diag_service;
-
 
     // report to EM that app is running
     app_state_client.ReportApplicationState(ara::exec::applicationstate::ApplicationState::kRunning);
@@ -95,7 +98,6 @@ int main()
 
     // run pipeline loop
     pipeline.Run(video_provider);
-
 
     // cleanup resources when sigterm is received
 #ifdef USE_ARA_API

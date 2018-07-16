@@ -1,4 +1,5 @@
 #include "CVVideoProvider.h"
+#include <opencv/cv.hpp>
 
 bool CVVideoProvider::Init(const std::string& file_name)
 {

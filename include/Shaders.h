@@ -32,7 +32,7 @@ static GLbyte vShaderTexture[] = MAKE_GLSRC(
 );
 
 
-/*static GLbyte fShaderTexture[] = MAKE_GLSRC(
+static GLbyte fShaderTextureBGR[] = MAKE_GLSRC(
     precision mediump float;
     precision lowp sampler2D;
     uniform sampler2D uTexture;
@@ -40,12 +40,12 @@ static GLbyte vShaderTexture[] = MAKE_GLSRC(
     out vec4 fragColor;
     void main()
     {
-        vec4 color = texture(uTexture, vTexCoordinate).rgba;
+        vec4 color = texture(uTexture, vTexCoordinate).bgra;
         fragColor = color;
     }
-);*/
+);
 
-static GLbyte fShaderTexture[] = MAKE_GLSRC(
+static GLbyte fShaderTextureUYVY[] = MAKE_GLSRC(
     precision highp float;
     in vec2 vTexCoordinate;
     out vec4 color;

@@ -51,8 +51,13 @@ static bool initImageTexture(unsigned int textureUnit)
     // Bind the texture as a 2D texture.
     glBindTexture(GL_TEXTURE_2D, img_texture);
 
+#ifdef TARGET_QCM
     // Load the image data into the texture unit.
     glTexImage2D(GL_TEXTURE_2D, 0, GL_RGBA, frame_width / 2, frame_height, 0, GL_RGBA, GL_UNSIGNED_BYTE, NULL);
+#else
+    // Load the image data into the texture unit.
+    glTexImage2D(GL_TEXTURE_2D, 0, GL_RGB, frame_width, frame_height, 0, GL_RGB, GL_UNSIGNED_BYTE, NULL);
+#endif
 
 
     // Set the texture color to either wrap around or clamp to the edge.
@@ -79,7 +84,7 @@ static void initWindow()
     // Creating Wayland window
     wayland_display->setWidth(wayland_display->getMaxWidth() / 2);
     wayland_display->setHeight(wayland_display->getMaxHeight() / 2);
-    wayland_display->setPos(0, 0);
+    wayland_display->setPos(wayland_display->getMaxWidth() / 2, wayland_display->getMaxHeight() / 2);
 
     // Set window width and height
     window_height = wayland_display->getMaxHeight() / 2;
@@ -158,7 +163,11 @@ static int initShaders()
     fragmentShaderDiffuse = LoadShader( GL_FRAGMENT_SHADER, ( const char* ) fShaderDiffuse );
 
     vertexShaderTexture   = LoadShader( GL_VERTEX_SHADER, ( const char* ) vShaderTexture );
-    fragmentShaderTexture = LoadShader( GL_FRAGMENT_SHADER, ( const char* ) fShaderTexture );
+#ifdef TARGET_QCM
+    fragmentShaderTexture = LoadShader( GL_FRAGMENT_SHADER, ( const char* ) fShaderTextureUYVY );
+#else
+    fragmentShaderTexture = LoadShader( GL_FRAGMENT_SHADER, ( const char* ) fShaderTextureBGR );
+#endif
 
     // Create the program object
     programObjectDiffuse = glCreateProgram( );
@@ -262,8 +271,12 @@ void render(Rectangle* user_rectangles, unsigned int count, unsigned char *origi
 
     // Bind the texture as a 2D texture.
     glBindTexture(GL_TEXTURE_2D, img_texture);
+#ifdef TARGET_QCM
     // Load the image data into the texture unit.
     glTexSubImage2D(GL_TEXTURE_2D, 0, 0, 0, frame_width / 2, frame_height, GL_RGBA, GL_UNSIGNED_BYTE, original_img);
+#else
+    glTexSubImage2D(GL_TEXTURE_2D, 0, 0, 0, frame_width, frame_height, GL_RGB, GL_UNSIGNED_BYTE, original_img);
+#endif
 
     glUseProgram(programObjectTexture);
 

@@ -91,7 +91,11 @@ float DriverMonitoringPipeline::GetDrowsinessScore()
 void DriverMonitoringPipeline::GrayscaleCropImage()
 {
     grayscale_img_ = data_.original_img_.colRange(HORIZONTAL_CROP, INPUT_RESOLUTION_WIDTH - HORIZONTAL_CROP);
+#ifdef TARGET_QCM
     cv::cvtColor(grayscale_img_, grayscale_img_, CV_YUV2GRAY_UYVY);
+#else
+    cv::cvtColor(grayscale_img_, grayscale_img_, CV_BGR2GRAY);
+#endif
     cv::equalizeHist(grayscale_img_, grayscale_img_);
 }
 

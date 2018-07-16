@@ -3,6 +3,7 @@
 
 #include "VideoProvider.h"
 #include "../common/CameraInput/inc/CameraInput.h"
+//#include "../common/camera-simulator/inc/CameraInput.h"
 #include <mutex>
 #include <memory>
 
@@ -41,7 +42,7 @@ public:
      * @param frame [out] acquired frame
      * @return true on success, false if error occurs
      */
-    bool GetFrame(cv::Mat &frame) override;
+    bool GetFrame(cv::Mat& frame) override;
 
     /**
      * @brief Cleanup camera provider resources
@@ -54,12 +55,7 @@ private:
 
     uint8_t frame_[QCM_CAM_FRAME_SIZE]; /**< acquired camera frame */
 
-    std::mutex frame_lock;  /**< lock used for synchronization of acquiring camera frame and providing it to users when GetFrame is called. */
-
     CAM_Cameras camera_id_; /**< used camera id */
-
-    std::unique_ptr<cameraFrameCb> camera_callback;
-
 };
 
 #endif
