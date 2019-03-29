@@ -1,7 +1,7 @@
 #ifndef _VIDEO_PROVIDER_H_
 #define _VIDEO_PROVIDER_H_
 
-#include <opencv/cv.h>
+#include <opencv2/opencv.hpp>
 
 /**
  * @brief The VideoProvider abstract class which presents custom video source.

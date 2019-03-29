@@ -4,6 +4,9 @@
 #include "DebugUtils.h"
 #include "RenderGraphics.h"
 
+#include <opencv2/imgproc/types_c.h>
+#include <opencv2/objdetect.hpp>
+
 #include <thread>
 #include <chrono>
 
@@ -44,6 +47,9 @@ void DriverMonitoringPipeline::Run(VideoProvider& video_provider)
             DEBUG_LOG("Failed to get frame, breaking algorithm loop!");
             break;
         }
+
+        cv::resize(data_.original_img_, data_.original_img_, cv::Size(1280, 720));
+
 
         GrayscaleCropImage();
         DEBUG_LOG("Grayscale crop image complete.");
@@ -108,7 +114,7 @@ void DriverMonitoringPipeline::PerformFaceDetection()
 {
     std::vector<cv::Rect> faces;
 
-    face_cascade_.detectMultiScale(downscaled_img_, faces, 1.1, 2, 0|CV_HAAR_SCALE_IMAGE, cv::Size(20, 20));
+    face_cascade_.detectMultiScale(downscaled_img_, faces, 1.1, 2, 0| cv::CASCADE_SCALE_IMAGE, cv::Size(20, 20));
 
     if(faces.size() > 0)
     {
@@ -170,10 +176,10 @@ void DriverMonitoringPipeline::PerformEyesDetection()
     right_eye_ROI = grayscale_img_(data_.right_eye_region_);
 
     //-- In each face, detect eyes
-    eyes_cascade_.detectMultiScale(left_eye_ROI, left_eye, 1.1, 2, 0 | CV_HAAR_SCALE_IMAGE,
+    eyes_cascade_.detectMultiScale(left_eye_ROI, left_eye, 1.1, 2, 0 | cv::CASCADE_SCALE_IMAGE,
                                    cv::Size(data_.face_region_.width * 0, data_.face_region_.height * 0), cv::Size(data_.face_region_.width * 0.35, data_.face_region_.height * 0.30));
 
-    eyes_cascade_.detectMultiScale(right_eye_ROI, right_eye, 1.1, 2, 0 | CV_HAAR_SCALE_IMAGE,
+    eyes_cascade_.detectMultiScale(right_eye_ROI, right_eye, 1.1, 2, 0 | cv::CASCADE_SCALE_IMAGE,
         cv::Size(data_.face_region_.width * 0, data_.face_region_.height * 0), cv::Size(data_.face_region_.width * 0.35, data_.face_region_.height * 0.30));
 
     if(left_eye.size() == 0 && right_eye.size() == 0)

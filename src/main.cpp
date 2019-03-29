@@ -2,8 +2,7 @@
 #include <opencv2/highgui.hpp>
 #include <opencv2/imgproc.hpp>
 #include <opencv2/videoio.hpp>
-#include <opencv/cv.h>
-
+#include <opencv2/opencv.hpp>
 #include <iostream>
 #include <stdio.h>
 #include <unistd.h>
@@ -46,7 +45,7 @@ int main()
 #ifdef TARGET_QCM
     CAM_Cameras video_provider_param = CAM_4;
 #else
-    std::string video_provider_param("/home/djokicm/RT-RK/vm-shared-dir/frames/DD.mp4");
+    std::string video_provider_param("0");
 #endif
 
     DriverMonitoringPipeline pipeline;
@@ -75,7 +74,11 @@ int main()
     diag_service.init();
 #endif
 
-    video_provider.Init(video_provider_param);
+    if(!video_provider.Init(video_provider_param))
+    {
+        DEBUG_LOG("Failed to init video source");
+        return -1;
+    }
 
     // init algorithm pipeline and load classifiers
     pipeline.Init(face_cascade_name, eyes_cascade_name);

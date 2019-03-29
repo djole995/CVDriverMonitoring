@@ -17,7 +17,21 @@ option(TARGET_QCM "USE_ARA_API" OFF)
 option(IMAGE_FORMAT_UYVY "IMAGE_FORMAT_UYVY" OFF)
 option(IMAGE_FORMAT_BGR "IMAGE_FORMAT_BGR" OFF)
 
-set(INC_DIRS include)
+
+
+find_package(OpenCV REQUIRED)
+
+# If the package has been found, several variables will
+# be set, you can find the full list with descriptions
+# in the OpenCVConfig.cmake file.
+# Print some message showing some of them
+message(STATUS "OpenCV library status:")
+message(STATUS "    config: ${OpenCV_DIR}")
+message(STATUS "    version: ${OpenCV_VERSION}")
+message(STATUS "    libraries: ${OpenCV_LIBS}")
+message(STATUS "    include path: ${OpenCV_INCLUDE_DIRS}")
+
+set(INC_DIRS include ${OpenCV_INCLUDE_DIRS})
 
 INCLUDE_DIRECTORIES(include ../common/DisplayAPI/inc gen/includes gen/vsomeip include/diag)
 
@@ -72,12 +86,13 @@ else()
 
     add_executable(${PROJECT_NAME} ${SRC_LIST})
     target_link_libraries(${PROJECT_NAME}
-    /usr/local/lib/libopencv_core.so
-    /usr/local/lib/libopencv_highgui.so
-    /usr/local/lib/libopencv_imgproc.so
-    /usr/local/lib/libopencv_objdetect.so
-    /usr/local/lib/libopencv_videoio.so DisplayAPI
-wayland-client wayland-egl EGL dl GLESv2)
+        ${OpenCV_LIBS}
+        DisplayManager
+        wayland-client
+        wayland-egl
+        EGL
+        dl
+        GLESv2)
 endif()
 
 

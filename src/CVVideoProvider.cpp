@@ -1,15 +1,31 @@
 #include "CVVideoProvider.h"
-#include <opencv/cv.hpp>
+#include <opencv2/opencv.hpp>
 
 bool CVVideoProvider::Init(const std::string& file_name)
 {
-    if(!video_capture_.open(file_name))
+    // using web camera as video source
+    if(file_name == "0")
     {
-        return false;
+        if(!video_capture_.open(0))
+        {
+            return false;
+        }
+        else
+        {
+            return true;
+        }
     }
+    // using file as video source
     else
     {
-        return true;
+        if(!video_capture_.open(file_name))
+        {
+            return false;
+        }
+        else
+        {
+            return true;
+        }
     }
 }
 
